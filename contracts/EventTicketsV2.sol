@@ -26,7 +26,7 @@ contract EventTicketsV2 {
     struct Event {
         string description;
         string website;
-        uint256 totalTickets;
+        uint totalTickets;
         uint sales;
         mapping(address => uint) buyers;
         bool isOpen;        
@@ -70,7 +70,7 @@ contract EventTicketsV2 {
             - return the event's ID
     */
 
-    function addEvent(string memory _description, string memory _url, uint256 _numberOfTickets) public isOwner returns(uint){
+    function addEvent(string memory _description, string memory _url, uint _numberOfTickets) public isOwner returns(uint){
         Event memory myEvent = Event( {
             description: _description,
             website: _url,
@@ -96,7 +96,7 @@ contract EventTicketsV2 {
             4. sales
             5. isOpen
     */
-    function readEvent(uint eventID) public view returns(string memory, string memory, uint256, uint, bool){
+    function readEvent(uint eventID) public view returns(string memory, string memory, uint, uint, bool){
         return (events[eventID].description, events[eventID].website, events[eventID].totalTickets,
                     events[eventID].sales, events[eventID].isOpen);
     }
@@ -116,13 +116,13 @@ contract EventTicketsV2 {
             - emits the appropriate event
     */
 
-    function buyTickets(uint eventId, uint256 numberOfTickets) public payable{
+    function buyTickets(uint eventId, uint numberOfTickets) public payable{
         require(events[eventId].isOpen, "Sales are not open");
         require(msg.value >= (numberOfTickets * PRICE_TICKET), " not sufficient balance");
         require(events[eventId].totalTickets >= numberOfTickets, " not enough tickets available");
         events[eventId].buyers[msg.sender] = events[eventId].buyers[msg.sender] + numberOfTickets;
-        events[eventId].sales += (numberOfTickets * PRICE_TICKET);
-        events[eventId].totalTickets -= numberOfTickets;
+        events[eventId].sales = events[eventId].sales + numberOfTickets ;
+        events[eventId].totalTickets = events[eventId].totalTickets - numberOfTickets;
         if(msg.value - (numberOfTickets * PRICE_TICKET) >= 0) {
             (msg.sender).transfer(msg.value - (numberOfTickets * PRICE_TICKET));
         }
@@ -167,7 +167,7 @@ contract EventTicketsV2 {
     */
     function endSale(uint eventID) public isOwner {
         events[eventID].isOpen = false;
-        owner.transfer(events[eventID].sales);
-        emit LogEndSale(msg.sender, events[eventID].sales, eventID);
+        owner.transfer(events[eventID].sales * PRICE_TICKET);
+        emit LogEndSale(msg.sender, events[eventID].sales * PRICE_TICKET, eventID);
     }
 }
